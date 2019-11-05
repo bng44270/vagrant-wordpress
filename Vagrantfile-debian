@@ -1,0 +1,26 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "rhel-base"
+  config.vm.provider "virtualbox" do |v|
+                v.memory = 2048
+  end
+  config.vm.box_url = "BASE IMAGE HERE"
+  config.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+  config.vm.define "base" do |base|
+  end
+  config.vm.provision "shell", inline: "sudo apt-get install -y httpd"
+  config.vm.provision "shell", inline: "sudo apt-get install -y php"
+  config.vm.provision "shell", inline: "sudo apt-get install -y mysql-server"
+  config.vm.provision "shell", inline: "sudo /etc/init.d/iptables stop"
+
+  config.vm.provision "shell", inline: <<-EOF
+    printf "Donwloading and extracting Wordpress to /var/www/html...."
+    wget --quiet -O /var/www/html/latest.tar.gz https://wordpress.org/latest.tar.gz
+    tar --ungzip -xf /var/www/html/latest.tar.gz -C /var/www/html
+    rm /var/www/html/latest.tar.gz
+    # Modify permissions as necessary
+    printf "done\n"
+  EOF
+
+  config.vm.provision "shell", inline: "sudo /etc/init.d/httpd start"
+  config.vm.provision "shell", inline: "sudo /etc/init.d/mysqld start"
+end
